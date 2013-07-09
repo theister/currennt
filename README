@@ -19,6 +19,8 @@ least a GeForce 210, GT 220/40, FX380 LP, 1800M, 370/380M or NVS 2/3100M)
     5.1 General structure
     5.2 Regression tasks
     5.3 Classification tasks
+6. Tests
+7. Examples
 
 +=============================================================================+
 | 1. Building on Linux                                                        |
@@ -465,3 +467,29 @@ Additional dimensions:
 
 Additional variables:
 * int targetClasses(numTimesteps) = Target classes (one for each timestep)
+
+
++=============================================================================+
+| 6. Tests                                                                    |
++=============================================================================+
+The directory 'tests' contains the scripts which check if the library produces
+the correct output for a predefined input. Currently there is only one test
+'test1' which traines a small deep RNN for one epoch and compares the trained
+weights. To run the test, execute the 'run.py' Python script from within the 
+directory 'test1'. The result will be printed on the screen. Make sure that you
+have built CURRENNT as described above before you run a test.
+
+
++=============================================================================+
+| 7. Examples                                                                 |
++=============================================================================+
+The directory 'examples' contains example configurations that show how to use
+CURRENNT. The subdirectory 'chime' contains a multiclass classification task
+with data form the 2nd CHiME Speech Separation and Recognition Challenge. The
+two *.nc files contain the training and validation sequences (just for one
+speaker in order to keep the download size reasonably low). The two directories
+'no_subsampling' and 'subsampling' contain different networks that are trained
+by executing the shell script 'run.sh' in each of these folders. The examples
+use an options file 'config.cfg' that contain the configuration for CURRENNT.
+Make sure that you have built CURRENNT as described above before you run the
+examples.
