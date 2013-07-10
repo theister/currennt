@@ -415,6 +415,7 @@ Some important points:
 Available hidden and output layer types:
 * feedforward_tanh     = Feed forward layer with tanh as activation function
 * feedforward_logistic = Feed forward layer with a logistic activation function
+* feedforward_identity = Feed forward layer with f(x)=x activation function
 * softmax              = Feed forward layer with softmax activation function
 * lstm                 = Unidir. LSTM layer with forget gates and peepholes
 * blstm                = Bidir.  LSTM layer with forget gates and peepholes
