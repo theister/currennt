@@ -131,6 +131,8 @@ namespace layers {
                 s = "feedforward_tanh";
             else if (typeid(TActFn) == typeid(activation_functions::Logistic))
                 s = "feedforward_logistic";
+            else if (typeid(TActFn) == typeid(activation_functions::Identity))
+                s = "feedforward_identity";
             else
                 throw std::runtime_error("Unsupported activation function");
         }
