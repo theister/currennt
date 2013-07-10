@@ -328,7 +328,7 @@ namespace data_sets {
         if (m_isClassificationData)
             frac->m_targetClasses.resize(frac->m_maxSeqLength * m_parallelSequences, -1);
         else
-            frac->m_outputs.resize(frac->m_maxSeqLength * m_parallelSequences);
+            frac->m_outputs.resize(frac->m_maxSeqLength * m_parallelSequences * m_outputPatternSize);
 
         // load sequences from the cache file and create the fraction vectors
         for (int i = 0; i < m_parallelSequences; ++i) {
