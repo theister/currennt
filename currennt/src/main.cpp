@@ -111,6 +111,14 @@ int trainerMain(const Configuration &config)
         printf("Creating the neural network... ");
         fflush(stdout);
         NeuralNetwork<TDevice> neuralNetwork(netDoc, parallelSequences, maxSeqLength);
+
+        if (!trainingSet->empty() && trainingSet->outputPatternSize() != neuralNetwork.outputLayer().size())
+            throw std::runtime_error("Output layer size != target pattern size of the training set");
+        if (!validationSet->empty() && validationSet->outputPatternSize() != neuralNetwork.outputLayer().size())
+            throw std::runtime_error("Output layer size != target pattern size of the validation set");
+        if (!testSet->empty() && testSet->outputPatternSize() != neuralNetwork.outputLayer().size())
+            throw std::runtime_error("Output layer size != target pattern size of the test set");
+
         printf("done.\n");
         printf("Layers:\n");
         printLayers(neuralNetwork);
@@ -125,9 +133,8 @@ int trainerMain(const Configuration &config)
 
         printf("\n");
 
-        // train the network
+        // create the optimizer
         if (config.trainingMode()) {
-            // create the optimizer
             printf("Creating the optimizer... ");
             fflush(stdout);
             boost::scoped_ptr<optimizers::Optimizer<TDevice> > optimizer;
