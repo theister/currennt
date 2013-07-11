@@ -265,7 +265,7 @@ WARNING: If an autosave file already exists, it will be overwritten!
   ignored as they are stored in the autosave file itself. If you really want to
   change these options, you can edit the autosave file since it is an ordinary
   JSON file. WARNING: If you do this (a) you have to be careful not to break
-  anything (special characters, delimiters, ...) and (b) you loose the
+  anything (special characters, delimiters, ...) and (b) you lose the
   information about which options were used to obtain the autosave file in the
   first place. To continue training, you only need the autosave file and the
   training/validation/test data files.
@@ -476,21 +476,61 @@ Additional variables:
 The directory 'tests' contains the scripts which check if the library produces
 the correct output for a predefined input. Currently there is only one test
 'test1' which traines a small deep RNN for one epoch and compares the trained
-weights. To run the test, execute the 'run.py' Python script from within the 
-directory 'test1'. The result will be printed on the screen. Make sure that you
-have built CURRENNT as described above before you run a test.
+weights with reference weights obtained with RNNLIB. To run the test, execute
+the 'run.py' Python script from within the directory 'test1'. The result will
+be printed on the screen. Make sure that you have built CURRENNT as described
+above before you run a test.
 
 
 +=============================================================================+
 | 7. Examples                                                                 |
 +=============================================================================+
 The directory 'examples' contains example configurations that show how to use
-CURRENNT. The subdirectory 'chime' contains a multiclass classification task
-with data form the 2nd CHiME Speech Separation and Recognition Challenge. The
-two *.nc files contain the training and validation sequences (just for one
-speaker in order to keep the download size reasonably low). The two directories
-'no_subsampling' and 'subsampling' contain different networks that are trained
-by executing the shell script 'run.sh' in each of these folders. The examples
-use an options file 'config.cfg' that contain the configuration for CURRENNT.
+CURRENNT for classification and regression. 
+
+The examples use an options file 'config.cfg' that contain the configuration
+for CURRENNT and a JSON file 'network.jsn' to specify the network topologies.
 Make sure that you have built CURRENNT as described above before you run the
 examples.
+
+The following examples are provided:
+
++-----------------------------------------------------------------------------+
+| 7.1 Multi-class classification / Speech recognition                         |
++-----------------------------------------------------------------------------+
+The directory 'speech_recognition_chime' contains
+a noisy small vocabulary speech recognition task with 51 words from the
+2nd CHiME Speech Separation and Recognition Challenge. 
+
+The two *.nc files contain the training and validation sequences as 39
+Mel-frequency cepstral coefficient (MFCC) features per 10ms time step. Only the
+data for speaker 1 is provided in order to keep the download size reasonable. 
+
+The two directories 'no_subsampling' and 'subsampling' contain different
+network topologies (with and without activation subsampling layers) that are
+trained by executing the shell script 'run.sh' in each of these folders. 
+
+For a detailed description of the task and learning procedure, refer to
+
+Martin Wöllmer, Felix Weninger, Jürgen Geiger, Björn Schuller, Gerhard Rigoll:
+"Noise Robust ASR in Reverberated Multisource Environments Applying Convolutive
+NMF and Long Short-Term Memory", Computer Speech and Language, Special Issue on
+Speech Separation and Recognition in Multisource Environments, Elsevier, 17
+pages, 2013.
+
++-----------------------------------------------------------------------------+
+| 7.2 Regression / Autoencoding                                               |
++-----------------------------------------------------------------------------+
+The directory 'speech_autoencoding_chime' contains an example for a regression
+task, mapping noisy speech MFCC features to clean speech MFCC features, similar
+to autoencoding.  The input data is the same as for the speech recognition
+task, just the targets are different.  You can run the example via 'run.sh' as
+in the above.
+
+For a detailed description of the task and learning procedure, refer to
+
+Felix Weninger, Jürgen Geiger, Martin Wöllmer, Björn Schuller, Gerhard Rigoll:
+"The Munich Feature Enhancement Approach to the 2013 CHiME Challenge Using
+BLSTM Recurrent Neural Networks", Proc. 2nd CHiME Speech Separation and
+Recognition Challenge held in conjunction with ICASSP 2013, IEEE, Vancouver,
+Canada, 01.06.2013.
