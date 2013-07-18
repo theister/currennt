@@ -57,10 +57,14 @@ download them yourself.
 
 To build CURRENNT do the following:
 1) Open 'currennt.sln' in Visual Studio 2010
-2) Ensure that you installed the Boost library in 'C:/boost_1_52_0'. If you
-   want to use another version or another installation path, you need to modify
-   the project files for the 'currennt_lib' and 'currennt' projects. You
-   can do this by changing the include and library search paths under the
+2) Ensure that you installed the Boost library in 'C:/boost_1_52_0'. 
+   NOTE: If you build Boost from source, make sure you build the x64 version
+   (default is x86). This is done via
+     bjam msvc architecture=x86 address-model=64 stage
+   on the command line from the Boost source directory.
+   If you want to use another version or another installation path, you need 
+   to modify  the project files for the 'currennt_lib' and 'currennt' projects. 
+   You can do this by changing the include and library search paths under the
    project settings or you can edit the project files directly which is much
    simpler. To do this, open the files 'currennt_lib/currennt_lib.vcxproj'
    and 'currennt/currennt.vcxproj' and replace every occurence of
@@ -73,6 +77,11 @@ To build CURRENNT do the following:
 You might get many warnings like 'Cannot tell what pointer points to, assuming
 global memory space'. These are totally OK and there seems to be no way to
 suppress them.
+
+The build process creates currennt.exe in the Release directory.
+If you have not installed the NetCDF library and its dependencies in your
+global system path, you have to copy them from the CURRENNT source directory 
+into the Release directory.
 
 
 +=============================================================================+
@@ -509,6 +518,7 @@ data for speaker 1 is provided in order to keep the download size reasonable.
 The two directories 'no_subsampling' and 'subsampling' contain different
 network topologies (with and without activation subsampling layers) that are
 trained by executing the shell script 'run.sh' in each of these folders. 
+On Windows, the batch file 'run.bat' does the same.
 
 For a detailed description of the task and learning procedure, refer to
 
@@ -524,8 +534,8 @@ pages, 2013.
 The directory 'speech_autoencoding_chime' contains an example for a regression
 task, mapping noisy speech MFCC features to clean speech MFCC features, similar
 to autoencoding.  The input data is the same as for the speech recognition
-task, just the targets are different.  You can run the example via 'run.sh' as
-in the above.
+task, just the targets are different.  You can run the example via 'run.sh' 
+or 'run.bat' as in the above.
 
 For a detailed description of the task and learning procedure, refer to
 
