@@ -31,11 +31,12 @@ Building on Linux requires the following:
 * NetCDF scientific data library
 * Boost library 1.48 or higher
 
-To build CURRENNT execute the following commands:
-#> cd currennt
+To build CURRENNT execute the following commands within the directory
+containing this README file:
 #> mkdir build && cd build
 #> cmake ..
 #> make
+(Ensure that CMakeLists.txt is located in the parent directory of "build").
 
 This produces the executable file 'currennt'.
 
