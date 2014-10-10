@@ -94,8 +94,8 @@ namespace {
 namespace layers {
 
     template <typename TDevice>
-    SsePostOutputLayer<TDevice>::SsePostOutputLayer(const helpers::JsonValue &layerChild, TrainableLayer<TDevice> &precedingLayer)
-        : PostOutputLayer<TDevice>(layerChild, precedingLayer)
+    SsePostOutputLayer<TDevice>::SsePostOutputLayer(const helpers::JsonValue &layerChild, Layer<TDevice> &precedingLayer)
+        : PostOutputLayer<TDevice>(layerChild, precedingLayer, precedingLayer.size())
     {
     }
 

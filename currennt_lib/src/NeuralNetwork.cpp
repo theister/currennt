@@ -35,7 +35,8 @@
 
 
 template <typename TDevice>
-NeuralNetwork<TDevice>::NeuralNetwork(const helpers::JsonDocument &jsonDoc, int parallelSequences, int maxSeqLength)
+NeuralNetwork<TDevice>::NeuralNetwork(const helpers::JsonDocument &jsonDoc, int parallelSequences, int maxSeqLength, 
+                                      int inputSizeOverride = -1, int outputSizeOverride = -1)
 {
     try {
         // check the layers and weight sections
@@ -66,6 +67,18 @@ NeuralNetwork<TDevice>::NeuralNetwork(const helpers::JsonDocument &jsonDoc, int 
 
             std::string layerType = (*layerChild)["type"].GetString();
 
+            // override input/output sizes
+            if (inputSizeOverride > 0 && layerType == "input") {
+              (*layerChild)["size"].SetInt(inputSizeOverride);
+            }
+/*  Does not work yet, need another way to identify a) postoutput layer (last!) and then the corresponging output layer and type!
+            if (outputSizeOverride > 0 && (*layerChild)["name"].GetString() == "output") {
+              (*layerChild)["size"].SetInt(outputSizeOverride);
+            }
+            if (outputSizeOverride > 0 && (*layerChild)["name"].GetString() == "postoutput") {
+              (*layerChild)["size"].SetInt(outputSizeOverride);
+            }
+*/
             try {
             	layers::Layer<TDevice> *layer;
 
@@ -162,8 +175,12 @@ void NeuralNetwork<TDevice>::computeForwardPass()
 template <typename TDevice>
 void NeuralNetwork<TDevice>::computeBackwardPass()
 {
-    BOOST_REVERSE_FOREACH (boost::shared_ptr<layers::Layer<TDevice> > &layer, m_layers)
+    BOOST_REVERSE_FOREACH (boost::shared_ptr<layers::Layer<TDevice> > &layer, m_layers) {
         layer->computeBackwardPass();
+    //std::cout << "output errors " << layer->name() << std::endl;
+    //thrust::copy(layer->outputErrors().begin(), layer->outputErrors().end(), std::ostream_iterator<real_t>(std::cout, ";"));
+    //std::cout << std::endl;
+    }
 }
 
 template <typename TDevice>

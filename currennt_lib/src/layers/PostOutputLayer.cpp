@@ -49,13 +49,14 @@ namespace layers {
     template <typename TDevice>
     PostOutputLayer<TDevice>::PostOutputLayer(
         const helpers::JsonValue &layerChild, 
-        TrainableLayer<TDevice> &precedingLayer,
+        Layer<TDevice> &precedingLayer,
+        int requiredSize,
         bool createOutputs)
-        : Layer<TDevice>  (layerChild, precedingLayer.parallelSequences(), precedingLayer.maxSeqLength())
+        : Layer<TDevice>  (layerChild, precedingLayer.parallelSequences(), precedingLayer.maxSeqLength(), createOutputs)
         , m_precedingLayer(precedingLayer)
     {
-        if (this->size() != precedingLayer.size())
-            throw std::runtime_error("The size of the post output layer does not match the size of the output layer");
+        if (this->size() != requiredSize)
+            throw std::runtime_error("Size mismatch: " + boost::lexical_cast<std::string>(this->size()) + " vs. " + boost::lexical_cast<std::string>(requiredSize));
     }
 
     template <typename TDevice>

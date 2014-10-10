@@ -1,4 +1,4 @@
 #!/bin/sh
-../../../build/currennt config.cfg
+../../../build/currennt "$@" --options_file config.cfg 
 
 

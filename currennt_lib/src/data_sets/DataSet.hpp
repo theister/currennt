@@ -80,7 +80,11 @@ namespace data_sets {
         int    m_inputPatternSize;
         int    m_outputPatternSize;
 
+        Cpu::real_vector m_outputMeans;
+        Cpu::real_vector m_outputStdevs;
+
         std::fstream m_cacheFile;
+        std::string m_cacheFileName;
 
         std::vector<sequence_t> m_sequences;
 
@@ -103,8 +107,10 @@ namespace data_sets {
          * @param seqShuf  Apply sequence shuffling
          * @param noiseDev Static noise deviation
          */
-        DataSet(const std::string &ncfile, int parSeq, real_t fraction=1,
-            bool fracShuf=false, bool seqShuf=false, real_t noiseDev=0);
+        DataSet(const std::vector<std::string> &ncfiles, int parSeq, real_t fraction=1, 
+            int truncSeqLength=0,
+            bool fracShuf=false, bool seqShuf=false, real_t noiseDev=0,
+            std::string cachePath = "");
 
         /**
          * Destructor
@@ -141,6 +147,13 @@ namespace data_sets {
          * @return Next fraction or an empty pointer
          */
         boost::shared_ptr<DataSetFraction> getNextFraction();
+
+        /**
+         * Returns the local file name used to cache the data
+         *
+         * @return the local file name used to cache the data
+         */
+        std::string cacheFileName() const;
 
         /**
          * Returns the total number of sequences
@@ -183,6 +196,21 @@ namespace data_sets {
          * @return The size of the output patterns
          */
         int outputPatternSize() const;
+
+        /**
+         * Returns the output means (per feature) indicated in the NC file
+         *
+         * @return vector of output means
+         */
+        Cpu::real_vector outputMeans() const;
+
+        /**
+         * Returns the output standard deviations (per feature) indicated in the NC file
+         *
+         * @return vector of output standard deviations
+         */
+        Cpu::real_vector outputStdevs() const;
+
     };
 
 } // namespace data_sets

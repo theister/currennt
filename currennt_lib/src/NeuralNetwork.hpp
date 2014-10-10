@@ -24,6 +24,7 @@
 #define NEURALNETWORK_HPP
 
 #include "layers/InputLayer.hpp"
+#include "layers/TrainableLayer.hpp"
 #include "layers/PostOutputLayer.hpp"
 #include "data_sets/DataSet.hpp"
 #include "helpers/JsonClassesForward.hpp"
@@ -56,7 +57,8 @@ public:
      * @param parallelSequences The maximum number of sequences that shall be computed in parallel
      * @param maxSeqLength      The maximum length of a sequence
      */
-    NeuralNetwork(const helpers::JsonDocument &jsonDoc, int parallelSequences, int maxSeqLength);
+    NeuralNetwork(const helpers::JsonDocument &jsonDoc, int parallelSequences, int maxSeqLength,
+                  int inputSizeOverride, int outputSizeOverride);
 
     /**
      * Destructs the neural network

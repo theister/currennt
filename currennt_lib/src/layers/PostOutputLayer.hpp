@@ -40,7 +40,7 @@ namespace layers {
         typedef typename TDevice::real_vector real_vector;
 
     private:
-        TrainableLayer<TDevice> &m_precedingLayer;
+        Layer<TDevice> &m_precedingLayer;
 
     protected:
         real_vector& _targets();
@@ -57,7 +57,8 @@ namespace layers {
          */
         PostOutputLayer(
             const helpers::JsonValue &layerChild, 
-            TrainableLayer<TDevice>  &precedingLayer,
+            Layer<TDevice>  &precedingLayer,
+            int requiredSize,
             bool                      createOutputs = true
             );
 

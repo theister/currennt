@@ -60,7 +60,10 @@ namespace layers {
         if (createOutputs)
             m_outputs = Cpu::real_vector(m_parallelSequences * m_maxSeqLength * m_size);
 
-        m_patTypes = Cpu::real_vector(m_parallelSequences * m_maxSeqLength);
+        m_patTypes = Cpu::pattype_vector(m_parallelSequences * m_maxSeqLength);
+
+        // resize the output errors vector
+        m_outputErrors = Cpu::real_vector(this->_outputs().size(), (real_t)0);
     }
 
     template <typename TDevice>
@@ -120,6 +123,12 @@ namespace layers {
     typename Layer<TDevice>::real_vector& Layer<TDevice>::outputs()
     {
         return m_outputs;
+    }
+
+    template <typename TDevice>
+    typename Layer<TDevice>::real_vector& Layer<TDevice>::outputErrors()
+    {
+        return m_outputErrors;
     }
 
     template <typename TDevice>

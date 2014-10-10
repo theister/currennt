@@ -53,7 +53,7 @@ namespace layers {
          */
         RmsePostOutputLayer(
             const helpers::JsonValue &layerChild, 
-            TrainableLayer<TDevice> &precedingLayer
+            Layer<TDevice> &precedingLayer
             );
 
         /**

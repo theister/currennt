@@ -42,6 +42,7 @@ namespace optimizers {
 
     private:
         const real_t m_learningRate;
+        real_t m_learningRateFirst;
         const real_t m_momentum;
 
         std::vector<real_vector> m_weightDeltas;
@@ -92,6 +93,11 @@ namespace optimizers {
          * @see Optimizer::importState
          */
         virtual void importState(const helpers::JsonDocument &jsonDoc);
+
+        /**
+         * Sets the learning rate for the first layer.
+         */
+        void setLearningRateFirst(real_t learningRateFirst);
     };
 
 } // namespace optimizers

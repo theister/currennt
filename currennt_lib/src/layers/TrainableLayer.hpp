@@ -44,8 +44,9 @@ namespace layers {
         const int    m_inputWeightsPerBlock;
         const int    m_internalWeightsPerBlock;
         const real_t m_bias;
+        const real_t m_learningRate;
 
-        real_vector m_outputErrors;
+        //real_vector m_outputErrors;
         real_vector m_weights;
         real_vector m_weightUpdates;
 
@@ -97,11 +98,18 @@ namespace layers {
         real_t bias() const;
 
         /**
+         * Returns the learning rate used for this layer
+         *
+         * @return the learning rate used for this layer
+         */
+        real_t learningRate() const;
+
+        /**
          * Calculates the output errors of the layer
          *
          * @return The output error
          */
-        real_vector& outputErrors();
+        //real_vector& outputErrors();
 
         /**
          * Returns the current weights
@@ -123,6 +131,15 @@ namespace layers {
          * @return The current weight updates
          */
         const real_vector& weightUpdates() const;
+
+        /**
+         * Adds Gaussian weight noise with the given standard deviation.
+         * 
+         * @param sigma the standard deviation of the Gaussian weight noise
+         *
+         * @return void
+         */
+        void injectWeightNoise(real_t sigma);
 
         /**
          * Stores the weights of the layer in a JSON object

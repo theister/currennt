@@ -53,6 +53,7 @@ namespace layers {
         int               m_curMinSeqLength;
         int               m_curNumSeqs;
         real_vector       m_outputs;
+        real_vector       m_outputErrors;
         pattype_vector    m_patTypes;
 
     protected:
@@ -122,6 +123,13 @@ namespace layers {
          * @return The number sequences in the current data set fraction
          */
         int curNumSeqs() const;
+
+        /**
+         * Calculates the output errors of the layer
+         *
+         * @return The output error
+         */
+        real_vector& outputErrors();
 
         /**
          * Returns the pattern types vector

@@ -45,7 +45,7 @@ namespace layers {
          */
         BinaryClassificationLayer(
             const helpers::JsonValue &layerChild, 
-            TrainableLayer<TDevice>  &precedingLayer
+            Layer<TDevice>  &precedingLayer
             );
 
         /**
@@ -64,6 +64,11 @@ namespace layers {
          * @see Layer::type()
          */
         virtual const std::string& type() const;
+
+        /**
+         * @see Layer::loadSequences()
+         */
+        virtual void loadSequences(const data_sets::DataSetFraction &fraction);
 
         /**
          * @see PostOutputLayer::calculateError()

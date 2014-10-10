@@ -32,7 +32,9 @@
 #include <boost/filesystem.hpp>
 #include <boost/random/random_device.hpp>
 #include <boost/lexical_cast.hpp>
+#include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/replace.hpp>
+
 namespace po = boost::program_options;
 
 #define DEFAULT_UINT_MAX std::numeric_limits<unsigned>::max(), "inf"
@@ -107,6 +109,12 @@ Configuration::Configuration(int argc, const char *argv[])
     std::string optionsFile;
     std::string optimizerString;
     std::string weightsDistString;
+    std::string feedForwardFormatString;
+
+    std::string trainingFileList;
+    std::string validationFileList;
+    std::string testFileList;
+    std::string feedForwardInputFileList;
 
     // create the command line options
     po::options_description commonOptions("Common options");
@@ -115,22 +123,28 @@ Configuration::Configuration(int argc, const char *argv[])
         ("options_file",       po::value(&optionsFile),                                       "reads the command line options from the file")
         ("network",            po::value(&m_networkFile)      ->default_value("network.jsn"), "sets the file containing the layout and weights of the neural network")
         ("cuda",               po::value(&m_useCuda)          ->default_value(true),          "use CUDA to accelerate the computations")
+        ("list_devices",       po::value(&m_listDevices)      ->default_value(false),         "display list of CUDA devices and exit")
         ("parallel_sequences", po::value(&m_parallelSequences)->default_value(1),             "sets the number of parallel calculated sequences")
         ("random_seed",        po::value(&m_randomSeed)       ->default_value(0u),            "sets the seed for the random number generator (0 = auto)")
         ;
 
-    po::options_description feedForwardOptions("Feed forward options");
+    po::options_description feedForwardOptions("Forward pass options");
     feedForwardOptions.add_options()
-        ("ff_output_file", po::value(&m_feedForwardOutputFile)->default_value("ff_output.csv"), "sets the name of the output file in feed forward mode")
-        ("ff_input_file",  po::value(&m_feedForwardInputFile),                                  "sets the name of the input file in feed forward mode")
+        ("ff_output_format", po::value(&feedForwardFormatString)->default_value("single_csv"), "output format for output layer activations (htk, csv or single_csv)")
+        ("ff_output_file", po::value(&m_feedForwardOutputFile)->default_value("ff_output.csv"), "sets the name of the output file / directory in forward pass mode (directory for htk / csv modes)")
+        ("ff_output_kind", po::value(&m_outputFeatureKind)->default_value(9), "sets the parameter kind in case of HTK output (9: user, consult HTK book for details)")
+        ("feature_period", po::value(&m_featurePeriod)->default_value(10), "sets the feature period in case of HTK output (in seconds)")
+        ("ff_input_file",  po::value(&feedForwardInputFileList),                                  "sets the name(s) of the input file(s) in forward pass mode")
+        ("revert_std",     po::value(&m_revertStd)->default_value(true), "if regression is performed, unstandardize the output activations so that features are on the original targets' scale")
         ;
 
     po::options_description trainingOptions("Training options");
     trainingOptions.add_options()
         ("train",               po::value(&m_trainingMode)     ->default_value(false),                 "enables the training mode")
-        ("hybrid_online_batch", po::value(&m_hybridOnlineBatch)->default_value(false),                 "enables weight updates after every fraction of parallel calculated sequences")
-        ("shuffle_fractions",   po::value(&m_shuffleFractions) ->default_value(false),                 "shuffles fractions in hybrid online/batch learning")
-        ("shuffle_sequences",   po::value(&m_shuffleSequences) ->default_value(false),                 "shuffles sequences within and across fractions in hybrid online/batch learning")
+        ("stochastic", po::value(&m_hybridOnlineBatch)->default_value(false),                 "enables weight updates after every mini-batch of parallel calculated sequences")
+        ("hybrid_online_batch", po::value(&m_hybridOnlineBatch)->default_value(false),                 "same as --stochastic (for compatibility)")
+        ("shuffle_fractions",   po::value(&m_shuffleFractions) ->default_value(false),                 "shuffles mini-batches in stochastic gradient descent")
+        ("shuffle_sequences",   po::value(&m_shuffleSequences) ->default_value(false),                 "shuffles sequences within and across mini-batches")
         ("max_epochs",          po::value(&m_maxEpochs)        ->default_value(DEFAULT_UINT_MAX),      "sets the maximum number of training epochs")
         ("max_epochs_no_best",  po::value(&m_maxEpochsNoBest)  ->default_value(20),                    "sets the maximum number of training epochs in which no new lowest error could be achieved")
         ("validate_every",      po::value(&m_validateEvery)    ->default_value(1),                     "sets the number of epochs until the validation error is computed")
@@ -138,25 +152,32 @@ Configuration::Configuration(int argc, const char *argv[])
         ("optimizer",           po::value(&optimizerString)    ->default_value("steepest_descent"),    "sets the optimizer used for updating the weights")
         ("learning_rate",       po::value(&m_learningRate)     ->default_value((real_t)1e-5, "1e-5"),  "sets the learning rate for the steepest descent optimizer")
         ("momentum",            po::value(&m_momentum)         ->default_value((real_t)0.9,  "0.9"),   "sets the momentum for the steepest descent optimizer")
+        ("weight_noise_sigma",  po::value(&m_weightNoiseSigma)  ->default_value((real_t)0), "sets the standard deviation of the weight noise added for the gradient calculation on every batch")
         ("save_network",        po::value(&m_trainedNetwork)   ->default_value("trained_network.jsn"), "sets the file name of the trained network that will be produced")
         ;
 
     po::options_description autosaveOptions("Autosave options");
     autosaveOptions.add_options()
         ("autosave",        po::value(&m_autosave)->default_value(false), "enables autosave after every epoch")
+        ("autosave_best",        po::value(&m_autosaveBest)->default_value(false), "enables autosave on best validation error")
         ("autosave_prefix", po::value(&m_autosavePrefix),                 "prefix for autosave files; e.g. 'abc/mynet-' will lead to file names like 'mynet-epoch005.autosave' in the directory 'abc'")
         ("continue",        po::value(&m_continueFile),                   "continues training from an autosave file")
         ;
 
     po::options_description dataFilesOptions("Data file options");
     dataFilesOptions.add_options()
-        ("train_file",        po::value(&m_trainingFile),                                 "sets the *.nc file containing the training sequences")
-        ("val_file",          po::value(&m_validationFile),                               "sets the *.nc file containing the validation sequences")
-        ("test_file",         po::value(&m_testFile),                                     "sets the *.nc file containing the test sequences")
+        ("train_file",        po::value(&trainingFileList),                                 "sets the *.nc file(s) containing the training sequences")
+        ("val_file",          po::value(&validationFileList),                               "sets the *.nc file(s) containing the validation sequences")
+        ("test_file",         po::value(&testFileList),                                     "sets the *.nc file(s) containing the test sequences")
         ("train_fraction",    po::value(&m_trainingFraction)  ->default_value((real_t)1), "sets the fraction of the training set to use")
         ("val_fraction",      po::value(&m_validationFraction)->default_value((real_t)1), "sets the fraction of the validation set to use")
         ("test_fraction",     po::value(&m_testFraction)      ->default_value((real_t)1), "sets the fraction of the test set to use")
-        ("input_noise_sigma", po::value(&m_inputNoiseSigma)   ->default_value((real_t)0), "sets the standard deviation of the input noise for training and feed forward sets")
+        ("truncate_seq",      po::value(&m_truncSeqLength)    ->default_value(0),         "enables training sequence truncation to given maximum length (0 to disable)")
+        ("input_noise_sigma", po::value(&m_inputNoiseSigma)   ->default_value((real_t)0), "sets the standard deviation of the input noise for training sets")
+        ("input_left_context", po::value(&m_inputLeftContext) ->default_value(0), "sets the number of left context frames (first frame is duplicated as necessary)")
+        ("input_right_context", po::value(&m_inputRightContext)->default_value(0), "sets the number of right context frames (last frame is duplicated as necessary)")
+        ("output_time_lag",   po::value(&m_outputTimeLag)->default_value(0),              "sets the time lag in the training targets (0 = predict current frame, 1 = predict previous frame, etc.)")
+        ("cache_path",        po::value(&m_cachePath)         ->default_value(""),        "sets the cache path where the .nc data is cached for random access")
         ;
 
     po::options_description weightsInitializationOptions("Weight initialization options");
@@ -231,6 +252,15 @@ Configuration::Configuration(int argc, const char *argv[])
     // store the options for autosave
     m_serializedOptions = internal::serializeOptions(vm);
 
+    // split the training file options
+    boost::algorithm::split(m_trainingFiles, trainingFileList, boost::algorithm::is_any_of(";,"), boost::algorithm::token_compress_on);
+    if (!validationFileList.empty())
+        boost::algorithm::split(m_validationFiles, validationFileList, boost::algorithm::is_any_of(";,"), boost::algorithm::token_compress_on);
+    if (!testFileList.empty())
+        boost::algorithm::split(m_testFiles, testFileList, boost::algorithm::is_any_of(";,"), boost::algorithm::token_compress_on);
+    if (!feedForwardInputFileList.empty())
+        boost::algorithm::split(m_feedForwardInputFiles, feedForwardInputFileList, boost::algorithm::is_any_of(";,"), boost::algorithm::token_compress_on);
+
     // check the optimizer string
     if (optimizerString == "rprop")
         m_optimizer = OPTIMIZER_RPROP;
@@ -255,6 +285,18 @@ Configuration::Configuration(int argc, const char *argv[])
         exit(1);
     }
 
+    // check the feedforward format string
+    if (feedForwardFormatString == "single_csv")
+        m_feedForwardFormat = FORMAT_SINGLE_CSV;
+    else if (feedForwardFormatString == "csv")
+        m_feedForwardFormat = FORMAT_CSV;
+    else if (feedForwardFormatString == "htk")
+        m_feedForwardFormat = FORMAT_HTK;
+    else {
+        std::cout << "ERROR: Invalid feedforward format string. Possible values: single_csv, csv, htk." << std::endl;
+        exit(1);
+    }
+
     // check data sets fractions
     if (m_trainingFraction <= 0 || 1 < m_trainingFraction) {
         std::cout << "ERROR: Invalid training set fraction. Should be 0 < x <= 1" << std::endl;
@@ -274,9 +316,9 @@ Configuration::Configuration(int argc, const char *argv[])
         std::cout << "Started in " << (m_hybridOnlineBatch ? "hybrid online/batch" : "batch") << " training mode." << std::endl;
 
         if (m_shuffleFractions)
-            std::cout << "Data fractions (" << m_parallelSequences << " sequences each) will be shuffled during training." << std::endl;
+            std::cout << "Mini-batches (" << m_parallelSequences << " sequences each) will be shuffled during training." << std::endl;
         if (m_shuffleSequences)
-            std::cout << "Sequences will be shuffled within and across data fractions during training." << std::endl;
+            std::cout << "Sequences will be shuffled within and across mini-batches during training." << std::endl;
         if (m_inputNoiseSigma != (real_t)0)
             std::cout << "Using input noise with a standard deviation of " << m_inputNoiseSigma << "." << std::endl;
 
@@ -285,16 +327,16 @@ Configuration::Configuration(int argc, const char *argv[])
             std::cout << "WARNING: The output file '" << m_trainedNetwork << "' already exists. It will be overwritten!" << std::endl;
     }
     else {
-        std::cout << "Started in feed forward mode." << std::endl;
+        std::cout << "Started in forward pass mode." << std::endl;
 
-        std::cout << "The feed forward output will be written to '" << m_feedForwardOutputFile << "'." << std::endl;
+        std::cout << "The forward pass output will be written to '" << m_feedForwardOutputFile << "'." << std::endl;
         if (boost::filesystem::exists(m_feedForwardOutputFile))
             std::cout << "WARNING: The output file '" << m_feedForwardOutputFile << "' already exists. It will be overwritten!" << std::endl;
     }
 
-    if (m_trainingMode && !m_validationFile.empty())
+    if (m_trainingMode && !m_validationFiles.empty())
         std::cout << "Validation error will be calculated every " << m_validateEvery << " epochs." << std::endl;
-    if (m_trainingMode && !m_testFile.empty())
+    if (m_trainingMode && !m_testFiles.empty())
         std::cout << "Test error will be calculated every " << m_testEvery << " epochs." << std::endl;
 
     if (m_trainingMode) {
@@ -302,6 +344,13 @@ Configuration::Configuration(int argc, const char *argv[])
         if (m_maxEpochs != std::numeric_limits<unsigned>::max())
             std::cout << " after " << m_maxEpochs << " epochs or";
         std::cout << " if there is no new lowest validation error within " << m_maxEpochsNoBest << " epochs." << std::endl;
+    }
+    
+    if (m_autosave) {
+        std::cout << "Autosave after EVERY EPOCH enabled." << std::endl;
+    }
+    if (m_autosaveBest) {
+        std::cout << "Autosave on BEST VALIDATION ERROR enabled." << std::endl;
     }
 
     if (m_useCuda)
@@ -359,9 +408,19 @@ bool Configuration::useCuda() const
     return m_useCuda;
 }
 
+bool Configuration::listDevices() const
+{
+    return m_listDevices;
+}
+
 bool Configuration::autosave() const
 {
     return m_autosave;
+}
+
+bool Configuration::autosaveBest() const
+{
+    return m_autosaveBest;
 }
 
 Configuration::optimizer_type_t Configuration::optimizer() const
@@ -409,19 +468,25 @@ const std::string& Configuration::networkFile() const
     return m_networkFile;
 }
 
-const std::string& Configuration::trainingFile() const
+const std::vector<std::string>& Configuration::trainingFiles() const
 {
-    return m_trainingFile;
+    return m_trainingFiles;
 }
 
-const std::string& Configuration::validationFile() const
+const std::string& Configuration::cachePath() const
 {
-    return m_validationFile;
+    return m_cachePath;
 }
 
-const std::string& Configuration::testFile() const
+
+const std::vector<std::string>& Configuration::validationFiles() const
 {
-    return m_testFile;
+    return m_validationFiles;
+}
+
+const std::vector<std::string>& Configuration::testFiles() const
+{
+    return m_testFiles;
 }
 
 unsigned Configuration::randomSeed() const
@@ -459,6 +524,26 @@ real_t Configuration::inputNoiseSigma() const
     return m_inputNoiseSigma;
 }
 
+int Configuration::inputLeftContext() const
+{
+    return m_inputLeftContext;
+}
+
+int Configuration::inputRightContext() const
+{
+    return m_inputRightContext;
+}
+
+int Configuration::outputTimeLag() const
+{   
+    return m_outputTimeLag;
+}
+
+real_t Configuration::weightNoiseSigma() const
+{
+    return m_weightNoiseSigma;
+}
+
 real_t Configuration::trainingFraction() const
 {
     return m_trainingFraction;
@@ -479,11 +564,32 @@ const std::string& Configuration::trainedNetworkFile() const
     return m_trainedNetwork;
 }
 
-const std::string& Configuration::feedForwardInputFile() const
+Configuration::feedforwardformat_type_t Configuration::feedForwardFormat() const
 {
-    return m_feedForwardInputFile;
+    return m_feedForwardFormat;
+}
+
+real_t Configuration::featurePeriod() const
+{
+    return m_featurePeriod;
+}
+
+unsigned Configuration::outputFeatureKind() const
+{
+    return m_outputFeatureKind;
+}
+
+unsigned Configuration::truncateSeqLength() const
+{
+    return m_truncSeqLength;
+}
+
+const std::vector<std::string>& Configuration::feedForwardInputFiles() const
+{
+    return m_feedForwardInputFiles;
 
 }
+
 const std::string& Configuration::feedForwardOutputFile() const
 {
     return m_feedForwardOutputFile;
@@ -497,4 +603,9 @@ const std::string& Configuration::autosavePrefix() const
 const std::string& Configuration::continueFile() const
 {
     return m_continueFile;
+}
+
+bool Configuration::revertStd() const
+{
+    return m_revertStd;
 }

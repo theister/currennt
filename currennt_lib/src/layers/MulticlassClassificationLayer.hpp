@@ -50,7 +50,7 @@ namespace layers {
          */
         MulticlassClassificationLayer(
             const helpers::JsonValue &layerChild, 
-            TrainableLayer<TDevice>  &precedingLayer
+            Layer<TDevice>  &precedingLayer
             );
 
         /**

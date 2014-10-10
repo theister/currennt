@@ -10,6 +10,7 @@
 #pragma warning(disable : 4127) // conditional expression is constant
 #endif
 
+#pragma pack (push, 4)
 namespace rapidjson {
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -25,7 +26,6 @@ namespace rapidjson {
 	\tparam Encoding	Encoding of the value. (Even non-string values need to have the same encoding in a document)
 	\tparam Allocator	Allocator type for allocating memory of object, array and string.
 */
-#pragma pack (push, 4)
 template <typename Encoding, typename Allocator = MemoryPoolAllocator<> > 
 class GenericValue {
 public:

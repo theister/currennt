@@ -68,11 +68,17 @@ namespace optimizers {
     void SteepestDescentOptimizer<TDevice>::_updateWeights()
     {
         internal::UpdateWeightFn updateWeightFn;
-        updateWeightFn.learningRate = m_learningRate;
         updateWeightFn.momentum     = m_momentum;
 
         for (size_t i = 1; i < this->_neuralNetwork().layers().size()-1; ++i) {
         	layers::TrainableLayer<TDevice> *layer = dynamic_cast<layers::TrainableLayer<TDevice>*>(this->_neuralNetwork().layers()[i].get());
+            if (!layer)
+                continue;
+
+            updateWeightFn.learningRate = m_learningRate;
+            if (layer->learningRate() >= 0.0)
+                updateWeightFn.learningRate = layer->learningRate();
+            //std::cout << "layer " << layer->name() << ": learning rate " << updateWeightFn.learningRate << std::endl;
 
             updateWeightFn.weights       = helpers::getRawPointer(layer->weights());
             updateWeightFn.weightUpdates = helpers::getRawPointer(this->_curWeightUpdates()[i]);
@@ -94,6 +100,7 @@ namespace optimizers {
         real_t learningRate, real_t momentum)
         : Optimizer<TDevice>(neuralNetwork, trainingSet, validationSet, testSet, maxEpochs, maxEpochsNoBest, validateEvery, testEvery)
         , m_learningRate    (learningRate)
+        , m_learningRateFirst(learningRate)
         , m_momentum        (momentum)
     {
         // intialize the weight deltas vectors with zeros
@@ -121,6 +128,12 @@ namespace optimizers {
         Optimizer<TDevice>::importState(jsonDoc);
 
         Optimizer<TDevice>::_importWeights(jsonDoc, "steepest_descent_optimizer_weight_deltas", &m_weightDeltas);
+    }
+
+    template <typename TDevice>
+    void SteepestDescentOptimizer<TDevice>::setLearningRateFirst(real_t learningRateFirst)
+    {
+        m_learningRateFirst = learningRateFirst;
     }
 
 

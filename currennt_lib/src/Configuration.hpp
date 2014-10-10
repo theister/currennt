@@ -44,6 +44,12 @@ public:
         DISTRIBUTION_UNIFORM
     };
 
+    enum feedforwardformat_type_t {
+        FORMAT_SINGLE_CSV,
+        FORMAT_CSV,
+        FORMAT_HTK
+    };
+
 private:
     static Configuration *ms_instance;
 
@@ -52,19 +58,26 @@ private:
     bool m_trainingMode;
     bool m_hybridOnlineBatch;
     bool m_useCuda;
+    bool m_listDevices;
     bool m_shuffleFractions;
     bool m_shuffleSequences;
     bool m_autosave;
+    bool m_autosaveBest;
 
-    optimizer_type_t    m_optimizer;
-    distribution_type_t m_weightsDistribution;
+    optimizer_type_t         m_optimizer;
+    distribution_type_t      m_weightsDistribution;
+    feedforwardformat_type_t m_feedForwardFormat;
 
+    bool m_revertStd;
+
+    unsigned m_truncSeqLength;
     unsigned m_parallelSequences;
     unsigned m_maxEpochs;
     unsigned m_maxEpochsNoBest;
     unsigned m_validateEvery;
     unsigned m_testEvery;
     unsigned m_randomSeed;
+    unsigned m_outputFeatureKind;
 
     real_t m_learningRate;
     real_t m_momentum;
@@ -73,19 +86,27 @@ private:
     real_t m_weightsNormalSigma;
     real_t m_weightsNormalMean;
     real_t m_inputNoiseSigma;
+    real_t m_weightNoiseSigma;
     real_t m_trainingFraction;
     real_t m_validationFraction;
     real_t m_testFraction;
+    real_t m_featurePeriod;
+
+    int m_inputLeftContext;
+    int m_inputRightContext;
+    int m_outputTimeLag;
 
     std::string m_networkFile;
-    std::string m_trainingFile;
-    std::string m_validationFile;
-    std::string m_testFile;
     std::string m_trainedNetwork;
-    std::string m_feedForwardInputFile;
     std::string m_feedForwardOutputFile;
     std::string m_autosavePrefix;
     std::string m_continueFile;
+    std::string m_cachePath;
+
+    std::vector<std::string> m_trainingFiles;
+    std::vector<std::string> m_validationFiles;
+    std::vector<std::string> m_testFiles;
+    std::vector<std::string> m_feedForwardInputFiles;
 
 public:
     /**
@@ -164,12 +185,21 @@ public:
      */
     bool useCuda() const;
 
+    bool listDevices() const;
+
     /**
      * Returns true if autosave is enabled
      *
      * @return True if autosave is enabled
      */
     bool autosave() const;
+    
+    /**
+      * Returns true if autosave at best validation error is enabled
+      *
+      * @return true if autosave at best validation error is enabled
+      */
+    bool autosaveBest() const;
 
     /**
      * Returns the optimizer type
@@ -239,21 +269,28 @@ public:
      *
      * @return The path to the *.nc file containing the training sequences
      */
-    const std::string& trainingFile() const;
+    const std::vector<std::string>& trainingFiles() const;
+
+    /**
+     * Returns the path for .nc cache files
+     *
+     * @return Path of .nc cache files
+     */
+    const std::string& cachePath() const;
 
     /**
      * Returns the path to the *.nc file containing the validation sequences
      *
      * @return The path to the *.nc file containing the validation sequences
      */
-    const std::string& validationFile() const;
+    const std::vector<std::string>& validationFiles() const;
 
     /**
      * Returns the path to the *.nc file containing the test sequences
      *
      * @return The path to the *.nc file containing the test sequences
      */
-    const std::string& testFile() const;
+    const std::vector<std::string>& testFiles() const;
 
     /**
      * Returns the seed for the random number generator
@@ -261,6 +298,13 @@ public:
      * @return The seed for the random number generator
      */
     unsigned randomSeed() const;
+
+    /**
+     * Returns the sequence length to which the training set is truncated
+     * 
+     * @return sequence truncation length
+     */
+    unsigned truncateSeqLength() const;
 
     /**
      * Returns the distribution type of the initial weights
@@ -305,6 +349,32 @@ public:
     real_t inputNoiseSigma() const;
 
     /**
+     * Returns the amount of context frames appended from the left
+     *
+     * @return the amount of context frames appended from the left
+     */
+    int inputLeftContext() const;
+
+    /**
+     * Returns the amount of context frames appended from the right
+     *
+     * @return the amount of context frames appended from the right
+     */
+    int inputRightContext() const;
+
+    /**
+     * Returns the time lag of the output targets
+     */
+    int outputTimeLag() const;
+
+    /**
+     * Returns the sigma of the normal distribution of the weight noise
+     *
+     * @return The sigma of the normal distribution of the weight noise
+     */
+    real_t weightNoiseSigma() const;
+
+    /**
      * Returns the fraction of the training set to use
      *
      * @return The fraction of the training set to use
@@ -333,16 +403,44 @@ public:
     const std::string& trainedNetworkFile() const;
 
     /**
-     * Returns the path to the feed forward input file
+     * Returns the forward pass output file format
      *
-     * @return The path to the feed forward input file
+     * @return The forward pass output file format
      */
-    const std::string& feedForwardInputFile() const;
+    feedforwardformat_type_t feedForwardFormat() const;
 
     /**
-     * Returns the path to the feed forward output file
+     * Returns whether output activations should be unstandardized in case of regression.
      *
-     * @return The path to the feed forward output file
+     * @return whether output activations should be unstandardized in case of regression
+     */
+    bool revertStd() const;
+
+    /**
+     * Returns the (HTK) feature kind of the output (only for HTK output)
+     *
+     * @return the (HTK) feature kind of the output (only for HTK output)
+     */
+    unsigned outputFeatureKind() const;
+
+    /**
+     * Returns the feature period in seconds (only for HTK output)
+     *
+     * @return the feature period in seconds (only for HTK output)
+     */
+    real_t featurePeriod() const;
+
+    /**
+     * Returns the path to the forward pass input file
+     *
+     * @return The path to the forward pass input file
+     */
+    const std::vector<std::string>& feedForwardInputFiles() const;
+
+    /**
+     * Returns the path to the forward pass output file
+     *
+     * @return The path to the forward pass output file
      */
     const std::string& feedForwardOutputFile() const;
 

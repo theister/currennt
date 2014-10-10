@@ -144,6 +144,15 @@
     <ClInclude Include="src\netcdf\netcdf.h">
       <Filter>netcdf</Filter>
     </ClInclude>
+    <ClInclude Include="src\layers\WeightedSsePostOutputLayer.hpp">
+      <Filter>layers</Filter>
+    </ClInclude>
+    <ClInclude Include="src\layers\SseMaskPostOutputLayer.hpp">
+      <Filter>layers</Filter>
+    </ClInclude>
+    <ClInclude Include="src\layers\CePostOutputLayer.hpp">
+      <Filter>layers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="src\layers\FeedForwardLayer.cu">
@@ -156,9 +165,6 @@
       <Filter>layers</Filter>
     </CudaCompile>
     <CudaCompile Include="src\layers\Layer.cpp">
-      <Filter>layers</Filter>
-    </CudaCompile>
-    <CudaCompile Include="src\layers\TrainableLayer.cpp">
       <Filter>layers</Filter>
     </CudaCompile>
     <CudaCompile Include="src\layers\InputLayer.cpp">
@@ -191,6 +197,18 @@
     </CudaCompile>
     <CudaCompile Include="src\optimizers\SteepestDescentOptimizer.cu">
       <Filter>optimizers</Filter>
+    </CudaCompile>
+    <CudaCompile Include="src\layers\WeightedSsePostOutputLayer.cu">
+      <Filter>layers</Filter>
+    </CudaCompile>
+    <CudaCompile Include="src\layers\SseMaskPostOutputLayer.cu">
+      <Filter>layers</Filter>
+    </CudaCompile>
+    <CudaCompile Include="src\layers\CePostOutputLayer.cu">
+      <Filter>layers</Filter>
+    </CudaCompile>
+    <CudaCompile Include="src\layers\TrainableLayer.cu">
+      <Filter>layers</Filter>
     </CudaCompile>
   </ItemGroup>
   <ItemGroup>

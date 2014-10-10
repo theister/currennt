@@ -28,6 +28,9 @@
 #include "layers/LstmLayer.hpp"
 #include "layers/SsePostOutputLayer.hpp"
 #include "layers/RmsePostOutputLayer.hpp"
+#include "layers/CePostOutputLayer.hpp"
+#include "layers/SseMaskPostOutputLayer.hpp"
+#include "layers/WeightedSsePostOutputLayer.hpp"
 #include "layers/BinaryClassificationLayer.hpp"
 #include "layers/MulticlassClassificationLayer.hpp"
 #include "activation_functions/Tanh.cuh"
@@ -60,19 +63,25 @@ layers::Layer<TDevice>* LayerFactory<TDevice>::createLayer(
     	return new LstmLayer<TDevice>(layerChild, weightsSection, *precedingLayer, false);
     else if (layerType == "blstm")
     	return new LstmLayer<TDevice>(layerChild, weightsSection, *precedingLayer, true);
-    else if (layerType == "sse" || layerType == "rmse" || layerType == "binary_classification" || layerType == "multiclass_classification") {
-        layers::TrainableLayer<TDevice>* precedingTrainableLayer = dynamic_cast<layers::TrainableLayer<TDevice>*>(precedingLayer);
-        if (!precedingTrainableLayer)
-    	    throw std::runtime_error("Cannot add post output layer after a non trainable layer");
+    else if (layerType == "sse" || layerType == "weightedsse" || layerType == "rmse" || layerType == "ce" || layerType == "wf" || layerType == "binary_classification" || layerType == "multiclass_classification") {
+        //layers::TrainableLayer<TDevice>* precedingTrainableLayer = dynamic_cast<layers::TrainableLayer<TDevice>*>(precedingLayer);
+        //if (!precedingTrainableLayer)
+    	//    throw std::runtime_error("Cannot add post output layer after a non trainable layer");
 
         if (layerType == "sse")
-    	    return new SsePostOutputLayer<TDevice>(layerChild, *precedingTrainableLayer);
+    	    return new SsePostOutputLayer<TDevice>(layerChild, *precedingLayer);
+        else if (layerType == "weightedsse")
+    	    return new WeightedSsePostOutputLayer<TDevice>(layerChild, *precedingLayer);
         else if (layerType == "rmse")
-            return new RmsePostOutputLayer<TDevice>(layerChild, *precedingTrainableLayer);
+            return new RmsePostOutputLayer<TDevice>(layerChild, *precedingLayer);
+        else if (layerType == "ce")
+            return new CePostOutputLayer<TDevice>(layerChild, *precedingLayer);
+        if (layerType == "sse_mask" || layerType == "wf") // wf provided for compat. with dev. version
+    	    return new SseMaskPostOutputLayer<TDevice>(layerChild, *precedingLayer);
         else if (layerType == "binary_classification")
-    	    return new BinaryClassificationLayer<TDevice>(layerChild, *precedingTrainableLayer);
+    	    return new BinaryClassificationLayer<TDevice>(layerChild, *precedingLayer);
         else // if (layerType == "multiclass_classification")
-    	    return new MulticlassClassificationLayer<TDevice>(layerChild, *precedingTrainableLayer);
+    	    return new MulticlassClassificationLayer<TDevice>(layerChild, *precedingLayer);
     }
     else
         throw std::runtime_error(std::string("Unknown layer type '") + layerType + "'");

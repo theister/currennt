@@ -47,7 +47,7 @@ namespace layers {
          */
         SsePostOutputLayer(
             const helpers::JsonValue &layerChild, 
-            TrainableLayer<TDevice> &precedingLayer
+            Layer<TDevice> &precedingLayer
             );
 
         /**
