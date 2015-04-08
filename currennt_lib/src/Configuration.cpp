@@ -71,7 +71,7 @@ void deserializeOptions(const std::string &autosaveFile, std::stringstream *ss)
     // open the file
     std::ifstream ifs(autosaveFile.c_str(), std::ios::binary);
     if (!ifs.good())
-        throw std::runtime_error("Cannot open file");
+        throw std::runtime_error("Cannot open autosave file for deserialization.");
 
     // calculate the file size in bytes
     ifs.seekg(0, std::ios::end);
