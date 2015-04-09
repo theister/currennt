@@ -213,7 +213,7 @@ int trainerMain(const Configuration &config)
 
             bool finished = false;
             while (!finished) {
-                const char *errFormat = (classificationTask ? "%6.2lf%%%10.3lf |" : "%17.3lf |");
+                const char *errFormat = (classificationTask ? "%6.2lf%%%10.3lf |" : "%17.5lf |");
                 const char *errSpace  = "                  |";
 
                 // train for one epoch and measure the time

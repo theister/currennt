@@ -97,7 +97,7 @@ namespace optimizers {
             _updateWeights();
 
         // normalize the errors
-        error /= ds.totalSequences();
+        error /= (real_t) ds.totalTimesteps();
         *classError /= (real_t)ds.totalTimesteps();
 
         return error;
