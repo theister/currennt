@@ -36,6 +36,7 @@
 #include "activation_functions/Tanh.cuh"
 #include "activation_functions/Logistic.cuh"
 #include "activation_functions/Identity.cuh"
+#include "activation_functions/RectifiedLinear.cuh"
 
 #include <stdexcept>
 
@@ -56,7 +57,9 @@ layers::Layer<TDevice>* LayerFactory<TDevice>::createLayer(
     else if (layerType == "feedforward_logistic")
     	return new FeedForwardLayer<TDevice, Logistic>(layerChild, weightsSection, *precedingLayer);
     else if (layerType == "feedforward_identity")
-    	return new FeedForwardLayer<TDevice, Identity>(layerChild, weightsSection, *precedingLayer);
+        return new FeedForwardLayer<TDevice, Identity>(layerChild, weightsSection, *precedingLayer);
+    else if (layerType == "feedforward_relu")
+    	return new FeedForwardLayer<TDevice, RectifiedLinear>(layerChild, weightsSection, *precedingLayer);
     else if (layerType == "softmax")
     	return new SoftmaxLayer<TDevice, Identity>(layerChild, weightsSection, *precedingLayer);
     else if (layerType == "lstm")
